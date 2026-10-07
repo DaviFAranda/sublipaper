@@ -1,0 +1,36 @@
+# Dados operacionais e arquivos locais
+dados/
+**/dados/
+qa/
+artes/
+uploads/
+**/artes/
+**/uploads/
+config.json
+**/config.json
+*.sqlite*
+*.db
+*.db-*
+.env
+.env.*
+!.env.example
+*.log
+
+# Dependências e arquivos gerados
+python-libs/
+node_modules/
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Relatórios da fábrica, capturas e endereços locais
+documentacao/
+ACESSO-REDE.txt
+LEIA-ME.md
+
+# Editor e sistema
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store

@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Sublipaper · Fábrica</title><link rel="stylesheet" href="/pedidos/portal.css"><link rel="stylesheet" href="/pedidos/operations.css"><link rel="stylesheet" href="/pedidos/overview.css">
+</head>
+<body>
+  <div id="auth" class="auth-screen">
+    <div class="auth-card">
+      <img src="/pedidos/logo-sublipaper.png" alt="Sublipaper" class="auth-logo">
+      <span class="eyebrow">PLATAFORMA DA FÁBRICA</span>
+      <h1 id="auth-title">Entrar no sistema</h1>
+      <p id="auth-description">Use sua conta para ver os pedidos e as áreas autorizadas.</p>
+      <form id="auth-form">
+        <label>Usuário<input id="auth-user" autocomplete="username" required maxlength="80"></label>
+        <label>Senha<input id="auth-password" type="password" autocomplete="current-password" required></label>
+        <button type="submit" class="primary">Continuar</button>
+      </form>
+      <p id="auth-error" class="error" role="alert"></p>
+      <small id="setup-hint"></small>
+    </div>
+  </div>
+
+  <div id="shell" class="shell hidden">
+    <aside class="sidebar">
+      <div class="brand"><img src="/pedidos/logo-sublipaper.png" alt="Sublipaper"><span>OPERAÇÃO & PRODUÇÃO</span></div>
+      <div class="nav-title">ESPAÇOS DE TRABALHO</div><nav id="navigation" aria-label="Áreas da fábrica"></nav>
+      <div class="sidebar-foot"><span class="status-dot"></span> Prévia de integração<br><small>Dados reais de Pedidos · etapas em conceito</small></div>
+    </aside>
+    <div class="content">
+      <header class="topbar"><button id="menu-toggle" class="menu-toggle" aria-label="Abrir menu">☰</button><div><span class="eyebrow">SUBLIPAPER / FÁBRICA</span><strong id="breadcrumb">Visão geral</strong></div><div class="account"><span id="account-name"></span><span id="account-role" class="role-chip"></span><button id="logout" title="Sair">Sair</button></div></header>
+      <main id="workspace"></main>
+    </div>
+  </div>
+  <script src="/pedidos/measurements.js"></script><script src="/pedidos/operations.js"></script><script src="/pedidos/overview.js"></script><script src="/pedidos/portal.js"></script>
+<a href="/" style="position:fixed;bottom:16px;right:20px;background:#154c43;color:white;padding:12px 18px;border-radius:12px;text-decoration:none;z-index:5">✂ Corte a Laser</a></body></html>

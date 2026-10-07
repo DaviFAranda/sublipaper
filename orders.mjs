@@ -1,0 +1,4 @@
+import {summary} from './domain.mjs';
+export function orderKey(job){return JSON.stringify([job.plan.order.trim().toLowerCase(),job.plan.client.trim().toLowerCase()]);}
+export function groupOrders(jobs){const groups=new Map();for(const j of jobs){const key=orderKey(j);if(!groups.has(key))groups.set(key,{key,order:j.plan.order,client:j.plan.client,jobs:[]});groups.get(key).jobs.push(j);}return [...groups.values()].map(g=>({...g,complete:g.jobs.every(j=>summary(j).status==='complete'&&!j.reprints.some(r=>r.status==='open')),drafts:g.jobs.filter(j=>j.status==='draft').length}));}
+export function identificationRows(jobs){const grouped=new Map();for(const j of jobs)for(const r of summary(j).rows){const key=JSON.stringify([j.plan.art,r.product,r.size,r.component,r.widthCm||null,r.heightCm||null]);if(!grouped.has(key))grouped.set(key,{...r,art:j.plan.art,quantity:0});grouped.get(key).quantity+=r.good;}return [...grouped.values()].filter(r=>r.quantity>0);}

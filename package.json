@@ -1,0 +1,12 @@
+{
+  "name": "sublipaper-laser",
+  "version": "3.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node unified.mjs"
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}

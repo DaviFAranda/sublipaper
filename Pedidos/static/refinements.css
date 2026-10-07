@@ -1,0 +1,8 @@
+.brand{display:block;background:#fff;border-radius:9px;padding:10px 9px;text-decoration:none}
+.brand img{display:block;width:100%;height:auto}
+.brand span{display:block;font-size:9px;letter-spacing:2px;margin-top:9px;color:#42736a;text-align:center}
+.file-list button.previewing{background:#d7eee8;color:#123f35;outline:2px solid #079aa4}
+.selection-preview div p{margin:5px 0}
+.detail-client{display:block;font-size:19px;margin:4px 0 7px}
+.item-quantity{font-size:18px;font-weight:750;color:#173c39}
+@media(max-width:600px){.brand{background:transparent;padding:0}.brand img{width:145px;background:white;border-radius:7px;padding:6px}}
