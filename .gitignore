@@ -34,3 +34,14 @@ LEIA-ME.md
 .idea/
 Thumbs.db
 .DS_Store
+
+# Credenciais e chaves locais
+*.pem
+*.key
+*.pfx
+*.p12
+id_rsa*
+id_ed25519*
+credentials*.json
+*service-account*.json
+secrets/

@@ -12,6 +12,7 @@ import {networkAddresses,allowedHost} from './network.mjs';
 import {proxyPedidos} from './gateway.mjs';
 
 const ROOT=path.dirname(fileURLToPath(import.meta.url));
+const VERSION=JSON.parse(fs.readFileSync(path.join(ROOT,'package.json'),'utf8').replace(/^\uFEFF/,'')).version;
 const defaults={port:8780,pedidosDb:process.env.PEDIDOS_DB||findOrders()};
 const cfg=fs.existsSync(path.join(ROOT,'config.json'))?{...defaults,...JSON.parse(fs.readFileSync(path.join(ROOT,'config.json'),'utf8').replace(/^\uFEFF/,''))}:defaults;
 const store=new Store(process.env.LASER_DB||path.join(ROOT,'dados','laser.sqlite3'));
@@ -42,7 +43,7 @@ export const server=http.createServer(async(req,res)=>{try{
  if(route==='/pedidos'||route.startsWith('/pedidos/')){if(!pedidosPort)return send(res,{error:'Inicie pelo Iniciar Sublipaper.cmd para abrir os Pedidos.'},503);return proxyPedidos(req,res,pedidosPort);}
  if(req.method==='GET'&&(route==='/api/integration/planilhas'||route.startsWith('/api/integration/planilhas/'))){if(!pedidosPort)return send(res,{error:'Inicie pelo inicializador único.'},503);req.url='/pedidos'+req.url;return proxyPedidos(req,res,pedidosPort);}
  if(req.method==='GET'&&route in staticFiles){const f=path.join(ROOT,'public',staticFiles[route]);return send(res,fs.readFileSync(f),200,types[path.extname(f)]);}
- if(req.method==='GET'&&route==='/api/health')return send(res,{ok:true,version:'3.0.0',app:'sublipaper-unificado',root:ROOT,pedidos:pedidosPort>0});
+ if(req.method==='GET'&&route==='/api/health')return send(res,{ok:true,version:VERSION,app:'sublipaper-unificado',root:ROOT,pedidos:pedidosPort>0});
  if(req.method==='GET'&&route==='/api/session')return send(res,{user:u,setup:false,loginRequired:false});
  if(req.method==='POST'){
   if(req.headers.origin&&req.headers.origin!==`http://${req.headers.host}`){return send(res,{error:'Origem inválida.'},403);}
