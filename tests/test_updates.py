@@ -5,7 +5,7 @@ ROOT=Path(__file__).resolve().parents[1]
 def git(p,*args):return subprocess.check_output(['git','-C',str(p),*args],stderr=subprocess.STDOUT).decode().strip()
 class UpdateTests(unittest.TestCase):
  def test_update_preserves_data_and_recovers(self):
-  self.temp=tempfile.TemporaryDirectory(prefix='sublipaper-update-');qa=Path(self.temp.name);source=qa/'source';source.mkdir()
+  self.temp=tempfile.TemporaryDirectory(prefix='sublipaper-update-');qa=Path(self.temp.name).resolve();source=qa/'source';source.mkdir()
   files=git(ROOT,'ls-files','--cached','--others','--exclude-standard','-z').split('\0')
   for name in set(files):
    if name and (ROOT/name).is_file():p=source/name;p.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(ROOT/name,p)
@@ -26,7 +26,7 @@ class UpdateTests(unittest.TestCase):
   backup=next((qa/'Backups_Sublipaper').glob('atualizacao-*'))
   for p in (installed/'dados/preservar.sqlite3',backup/'dados/preservar.sqlite3'):
    with sqlite3.connect(p) as db:self.assertEqual(db.execute('SELECT value FROM sample').fetchone()[0],'preservado')
-  with urllib.request.urlopen(f'http://127.0.0.1:{port}/api/health') as response:self.assertEqual(json.load(response)['root'],str(installed))
+  with urllib.request.urlopen(f'http://127.0.0.1:{port}/api/health') as response:self.assertTrue(os.path.samefile(json.load(response)['root'],installed))
   self.assertEqual(run().returncode,0)
   p=installed/'README.md';original=p.read_bytes();p.write_bytes(original+b'\nLocal change\n');head=git(installed,'rev-parse','HEAD');self.assertNotEqual(run().returncode,0);self.assertEqual(git(installed,'rev-parse','HEAD'),head);self.assertTrue(p.read_bytes().endswith(b'Local change\n'));p.write_bytes(original)
   p=source/'public/factory.mjs';valid_js=p.read_text(encoding='utf-8');p.write_text(valid_js+'\nconst = ;\n',encoding='utf-8');git(source,'add','public/factory.mjs');git(source,'commit','-m','QA invalid update');git(source,'push','origin','main')
@@ -40,7 +40,7 @@ class UpdateTests(unittest.TestCase):
   if hasattr(self,'installed'):
    # Stop only the server whose health reports this disposable checkout.
    try:
-    with urllib.request.urlopen(f'http://127.0.0.1:{self.port}/api/health') as response:assert json.load(response)['root']==str(self.installed)
+    with urllib.request.urlopen(f'http://127.0.0.1:{self.port}/api/health') as response:assert os.path.samefile(json.load(response)['root'],self.installed)
     command="$script:systemRoot=$env:QA_CHECKOUT; . (Join-Path $systemRoot 'ferramentas/deploy.ps1'); Stop-OwnedSystem (Get-OwnedSystemProcess)"
     subprocess.run(['powershell','-NoProfile','-Command',command],env={**os.environ,'QA_CHECKOUT':str(self.installed)},check=True,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,timeout=30)
    except Exception as exc:print('QA cleanup:',exc)
