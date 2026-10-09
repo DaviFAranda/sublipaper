@@ -50,6 +50,12 @@ jobs:
           $script:systemRoot = $env:GITHUB_WORKSPACE
           . ./ferramentas/deploy.ps1
           Test-SystemCode
+      - name: Testar fluxo de pedidos e contrato das planilhas
+        run: |
+          node --test tests/order_model.test.mjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tests/test_closing.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Testar atualização, backup e recuperação com bancos fictícios
         run: |
           python tests/test_updates.py

@@ -22,6 +22,18 @@ Copie `config.example.json` para `config.json` se precisar definir porta ou exec
 - `unified.mjs`: inicialização dos serviços.
 - `server.mjs`: serviço principal e integração.
 
+### Organização da versão 3.1
+
+A interface usa módulos nativos, sem etapa de compilação. `public/factory.mjs` controla apenas navegação e inicialização; `public/app/production.mjs` trata PCP e filas; `overview.mjs` trata acompanhamento; `order-model.mjs` concentra a projeção de situação compartilhada entre dashboard e pedidos; `api.mjs` mantém o transporte e as chaves de reenvio; `closing.mjs` apresenta a conferência final. `commercial.mjs` mantém cadastro e seleção de artes e utiliza um template separado. `workspace.css` define o padrão visual comum.
+
+O núcleo Python de produção e os bancos existentes são mantidos para preservar o histórico e as regras já operacionais. Esta é uma reconstrução gradual: não existe migração destrutiva de dados nem substituição das planilhas de faturamento. Serviços posteriores respeitam a liberação e a quantidade útil das etapas anteriores.
+
+`Pedidos/closing.py` é uma projeção sem escrita dos registros. A aba **Concluídos e dados** distingue entrega operacional de pendências de informação e reúne artes, referências, consumos, medições por etapa/unidade, grades, reimpressões e reposições no pedido original. Quantidades de unidades diferentes não são somadas; medições de etapas diferentes também não representam uma única saída final. O total de laser já inclui suas reimpressões.
+
+Os oito CSV anteriores continuam disponíveis com os mesmos campos. `fechamentos.csv` adiciona uma linha por pedido e `dados.json` acrescenta `closeouts`. Preços desconhecidos permanecem nulos. `CUSTO_CONHECIDO` considera apenas os consumos precificados; `CONSUMOS_REGISTRADOS_COM_PRECO` indica cobertura de preços dos registros disponíveis, não certifica o custo total da fábrica. Referências externas devem ser conferidas com os cadastros SAPP/PEDIDOS; sua ausência é visível e não bloqueia automaticamente um serviço onde não se aplicam.
+
+Testes isolados: `node --test tests/order_model.test.mjs` e `python tests/test_closing.py`. Verificam paralelismo das etapas, vínculo com pedido original, entrega, consumo, referências, unidades e o contrato de exportação. Também são executados no GitHub Actions.
+
 Bancos, imagens de clientes, configurações locais, dependências instaladas e relatórios internos ficam fora do Git. Faça backup separado dos dados antes de atualizar uma instalação. Clonar este repositório não recupera os dados operacionais.
 
 ## Versionamento

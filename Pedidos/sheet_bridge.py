@@ -4,6 +4,7 @@ from pathlib import Path
 from datetime import datetime, timezone
 from contextlib import contextmanager
 from billing_bridge import production, grade_projection
+from closing import close_orders, closeout_rows, CLOSEOUT_HEADERS
 
 @contextmanager
 def readonly(file):
@@ -49,6 +50,7 @@ def dataset(db,laser):
         (grades if s.get('system')=='sublipaper-pedidos' else unlinked).append(g)
     result={'schemaVersion':2,'generatedAt':datetime.now(timezone.utc).isoformat(),'orders':orders,'grades':grades,'reports':reports,'unlinkedGrades':unlinked,'lengthUnit':'cm','billingHandledBy':'external_spreadsheets'}
     result.update(operational_dataset(Path(db).parent/'operacoes.sqlite3',orders))
+    result['closeouts']=close_orders(result)
     return result
 
 def operational_dataset(file,orders):
@@ -83,6 +85,7 @@ def operational_dataset(file,orders):
     return output
 
 def csv_rows(data,kind):
+    if kind=='fechamentos':return closeout_rows(data['closeouts'])
     if kind=='medicoes':
         from decimal import Decimal
         return [{'PEDIDO_ID':r['orderId'],'PEDIDO_NUM':r['orderNumber'],'ITEM_ID':r['rootItemId'],'TRABALHO_ITEM_ID':r['productionItemId'],'ETAPA':r['action'],'META':str(Decimal(r['expected'])*(100 if r['unit']=='m' else 1)),'PROCESSADO':str(Decimal(r['processed'])*(100 if r['unit']=='m' else 1)),'BOAS':str(Decimal(r['good'])*(100 if r['unit']=='m' else 1)),'PERDAS':str(Decimal(r['loss'])*(100 if r['unit']=='m' else 1)),'UNIDADE':'cm' if r['unit']=='m' else r['unit'],'MOTIVO':r['reason'],'RESPONSAVEL':r['actor'],'DATA':r['created_at']} for r in data['measurements']]
@@ -112,6 +115,8 @@ HEADERS['medicoes']=['PEDIDO_ID','PEDIDO_NUM','ITEM_ID','TRABALHO_ITEM_ID','ETAP
 HEADERS.update(consumos=['CONSUMO_ID','PEDIDO_ID','PEDIDO_NUM','ITEM_ID','TRABALHO_ITEM_ID','SETOR','MATERIAL','QUANTIDADE','UNIDADE','PRECO_UNITARIO','CUSTO_CONHECIDO','PRECO_PENDENTE','LOTE','REFERENCIA','RESPONSAVEL','DATA'])
 HEADERS['consumos'] += [k.upper() for k in ['ft_id','sku_id','route_id','prep_id','color','lot_id']]
 HEADERS.update({k:['PEDIDO_ID','PEDIDO_NUM','ITEM_ID','TRABALHO_ITEM_ID','ETAPA','MAQUINA','REFERENCIA','RESPONSAVEL','DATA','DETALHES'] for k in ['etapas','entregas']})
+
+HEADERS['fechamentos']=CLOSEOUT_HEADERS
 
 def get(handler,path,db,laser):
     data=dataset(db,laser)

@@ -1,5 +1,7 @@
+import {ordersTemplate} from './app/orders-template.mjs';
+import {orderState,overviewState,mergeProductionOrders} from './app/order-model.mjs';
 export function mount(root,onPrepare){
-root.innerHTML="<section class=\"heading\"><div><h1>Central de pedidos</h1><p>Da primeira arte à previsão de entrega.</p></div><button id=\"new\">＋ Novo pedido</button></section><section id=\"stats\" class=\"stats\"></section><section class=\"panel\"><div class=\"toolbar\"><input id=\"search\" placeholder=\"Buscar pedido, cliente ou arte\" aria-label=\"Buscar pedido\"><select id=\"filter\" aria-label=\"Filtrar serviço\"><option value=\"\">Todos os serviços</option></select></div><div id=\"orders\"></div></section><dialog id=\"editor\"><form id=\"form\"><div class=\"dialog-head\"><div><span class=\"eyebrow\">NOVO PEDIDO</span><h2>Vamos colocar em produção.</h2></div><button type=\"button\" class=\"ghost close\" aria-label=\"Fechar\">✕</button></div><div class=\"dialog-body\"><p class=\"hint\">Data do pedido: <strong id=\"order-date\"></strong> · Previsão de entrega: <strong id=\"automatic-delivery\"></strong> · O número será reservado ao salvar.</p><div class=\"grid general\"><label>Cliente (pasta de artes) *<input name=\"client\" list=\"clients\" required maxlength=\"200\" autocomplete=\"off\" placeholder=\"Busque e selecione o cliente\"><small id=\"client-status\" class=\"price-note\">Carregando clientes…</small></label><datalist id=\"clients\"></datalist><label>Tipo de serviço *<select name=\"service\" required id=\"order-service\"></select></label><label>Tipo de tecido<input name=\"fabric\" maxlength=\"200\" placeholder=\"Obrigatório quando houver tecido\"></label><label>Largura (cm) *<input name=\"width_m\" type=\"number\" required min=\"0.001\" step=\"0.001\" placeholder=\"Ex.: 160\"></label><label>Unidade *<select name=\"unit\" required><option value=\"m\">Metros (m)</option><option value=\"kg\">Quilos (kg)</option><option value=\"pc\">Peças</option></select></label><label>Preço por Unidade de Medida (R$)<input name=\"unit_price\" type=\"number\" min=\"0\" step=\"0.001\" placeholder=\"A definir\"><small id=\"unit-price-note\" class=\"price-note\"></small></label><label>NF de referência<input name=\"nf\" maxlength=\"500\" placeholder=\"Opcional\"></label></div><p id=\"order-flow\" class=\"flow hidden\">Transferência direta: amostra → fábrica parceira → retorno → revisão → cliente.</p><div class=\"section-title\"><h3>Artes e quantidades</h3><button type=\"button\" id=\"add\" class=\"secondary\">＋ Adicionar arte</button></div><div id=\"items\"></div><label>Observações<textarea name=\"notes\" maxlength=\"2000\" rows=\"2\" placeholder=\"Instruções para este pedido\"></textarea></label><p id=\"error\" role=\"alert\"></p></div><div class=\"dialog-actions\"><span>Preço em branco é permitido.</span><button id=\"save\">Salvar pedido</button></div></form></dialog>\n<dialog id=\"detail\"><div class=\"dialog-head\"><h2>Detalhes do pedido</h2><button class=\"ghost close\" aria-label=\"Fechar\">✕</button></div><div id=\"detail-body\" class=\"dialog-body\"></div><div class=\"dialog-actions\"><button id=\"delete-order\" class=\"danger\">Excluir pedido</button><span>Conferência do pedido</span><button id=\"print\">Abrir romaneio em PDF</button></div></dialog><div id=\"commercial-toast\" role=\"status\"></div>";
+root.innerHTML=ordersTemplate;
 const $=s=>root.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const money=v=>Number(v).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
@@ -21,18 +23,24 @@ async function loadClients(){
 }
 async function refresh(){
   const response=await fetch('/pedidos/api/data');if(!response.ok)throw Error('Não foi possível carregar os pedidos.');
-  data=await response.json();const filter=$('#filter').value;
+  data=await response.json();
+  const productionResponse=await fetch('/pedidos/api/factory/orders');if(!productionResponse.ok)throw Error('Os pedidos carregaram, mas o acompanhamento está indisponível. Atualize para tentar novamente.');
+  const productionRows=await productionResponse.json();
+  data.orders=mergeProductionOrders(data.orders,productionRows);
+  const filter=$('#filter').value;
   $('#filter').innerHTML='<option value="">Todos os serviços</option>'+data.services.map(s=>`<option>${esc(s)}</option>`).join('');
   $('#order-service').innerHTML=data.services.map(s=>`<option ${s==='Transferência digital'?'selected':''}>${esc(s)}</option>`).join('');
   $('#filter').value=filter;render();
 }
 function render(){
-  const all=data.orders.flatMap(o=>o.items),sum=u=>all.filter(x=>x.unit===u).reduce((s,x)=>s+Number(x.quantity),0);
-  $('#stats').innerHTML=[['Pedidos registrados',data.orders.length],['Metragem solicitada',num(sum('m'))+' m'],['Peso solicitado',num(sum('kg'))+' kg']].map(([a,b])=>`<div class="stat"><span>${a}</span><strong>${b}</strong></div>`).join('');
-  const q=key($('#search').value),service=$('#filter').value;
-  const rows=data.orders.filter(o=>key([o.number,o.client,...o.items.map(x=>x.art)].join(' ')).includes(q)&&(!service||o.items.some(i=>i.service===service)));
-  $('#orders').innerHTML=rows.length?`<table><thead><tr><th>PEDIDO / CLIENTE</th><th>ARTES E SERVIÇOS</th><th>DATA DO PEDIDO</th><th>PREVISÃO DE ENTREGA</th><th>VALOR</th><th></th></tr></thead><tbody>${rows.map(o=>`<tr><td><strong>${esc(o.number)}</strong><small>${esc(o.client)}</small></td><td>${o.items.length} arte(s)<small>${esc([...new Set(o.items.map(i=>i.service))].join(' · '))}</small></td><td>${date(o.created_at)}</td><td>${date(o.delivery)}</td><td>${o.pending_prices===o.items.length?"A definir":money(o.total)}${o.pending_prices?'<small>Parcial · valores pendentes</small>':''}</td><td><button class="ghost view" data-id="${o.id}">Ver pedido ↗</button></td></tr>`).join('')}</tbody></table>`:`<div class="empty"><div class="symbol">▧</div><h3>${data.orders.length?'Nenhum pedido encontrado':'O próximo pedido começa aqui.'}</h3><p>${data.orders.length?'Tente outro cliente, arte ou serviço.':'Selecione o cliente, adicione as artes e combine a entrega.'}</p></div>`;
+ const states=data.orders.map(order=>({order,state:orderState(order)}));
+ $('#stats').innerHTML=[['Pedidos em aberto',states.filter(x=>!x.state.done).length],['Em execução',states.filter(x=>x.state.running).length],['Entregues',states.filter(x=>x.state.done).length]].map(([label,n])=>`<div class="stat"><span>${label}</span><strong>${n}</strong></div>`).join('');
+ const q=key($('#search').value),service=$('#filter').value,status=$('#order-state').value;
+ const rows=states.filter(({order:o,state:t})=>key([o.number,o.client,...o.items.map(x=>x.art)].join(' ')).includes(q)&&(!service||o.items.some(i=>i.service===service))&&(status==='all'||status==='open'&&!t.done||status==='pcp'&&o.items.some(i=>overviewState(i).pcp)||status==='running'&&t.running||status==='done'&&t.done));
+ $('#order-count').textContent=`${rows.length} pedido(s)`;
+ $('#orders').innerHTML=rows.length?`<div class="order-catalog">${rows.map(({order:o,state:t})=>`<article class="order-catalog-card"><div class="order-catalog-art">${o.items[0]?.asset_id?`<img src="/pedidos/miniaturas/${esc(o.items[0].asset_id)}.jpg" alt="Arte do pedido" loading="lazy">`:'<span>▧</span>'}</div><div class="order-catalog-body"><div class="order-catalog-head"><div><small>${esc(o.number)}</small><h2>${esc(o.client)}</h2></div><span class="state-chip ${t.done?'done':''}">${t.done?'Entregue':t.running?'Em execução':t.released?'Na produção':'Aguardando PCP'}</span></div><p>${esc([...new Set(o.items.map(i=>i.service))].join(' · '))} · ${o.items.length} arte(s)</p><div class="order-catalog-meta"><span>Entrega <b>${date(o.delivery)}</b></span><span>Valor <b>${o.pending_prices===o.items.length?'A definir':money(o.total)}</b>${o.pending_prices?' · parcial':''}</span></div><div class="order-catalog-progress"><span style="width:${o.items.length?100*t.delivered/o.items.length:0}%"></span></div><footer><small>${t.delivered}/${o.items.length} artes entregues</small><button class="ghost view" data-id="${o.id}">Abrir pedido →</button></footer></div></article>`).join('')}</div>`:`<div class="empty"><h3>${data.orders.length?'Nenhum pedido neste filtro':'Comece pelo primeiro pedido'}</h3><p>${data.orders.length?'Ajuste a busca ou a situação.':'Escolha o cliente e selecione as artes para preparar a produção.'}</p></div>`;
 }
+
 const field=(name,label,type='text',extra='')=>`<label>${label}<input name="${name}" type="${type}" ${extra}></label>`;
 function addItem(){
   const el=document.createElement('section');el.className='item';
@@ -76,7 +84,7 @@ clientInput.addEventListener('change',()=>{
   suggestPrice(true);
   if(client)fetch('/pedidos/api/art-files?relative='+encodeURIComponent(client.relative)).catch(()=>{});
 });
-$('#search').oninput=render;$('#filter').onchange=render;
+$('#search').oninput=render;$('#filter').onchange=render;$('#order-state').onchange=render;$('#refresh-orders').onclick=()=>refresh().catch(e=>toast(e.message));
 $('#form').onsubmit=async event=>{
   event.preventDefault();if(busy)return;
   const client=validateClient();if(!client){clientInput.reportValidity();return;}

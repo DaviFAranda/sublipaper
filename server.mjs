@@ -34,6 +34,8 @@ async function linkedItem(orderId,itemId){
 async function validateLaser(source,action){if(source)await productionApi('check-laser',{itemId:source.itemId,action});}
 async function synchronizeLaser(source,number){if(source)await productionApi('sync-laser',{number:source.productionOrder||number,batch_token:source.batchToken||''});}
 const staticFiles={'/':'index.html','/completion.mjs':'completion.mjs','/styles.css':'styles.css','/refinements.css':'refinements.css','/print.css':'print.css','/logo.png':'logo.png','/commercial.mjs':'commercial.mjs','/commercial.css':'commercial.css','/factory.mjs':'factory.mjs','/laser.mjs':'laser.mjs','/laser.css':'laser.css','/factory.css':'factory.css'};
+for(const name of ['api.mjs','order-model.mjs','production.mjs','overview.mjs','closing.mjs','orders-template.mjs'])staticFiles['/app/'+name]='app/'+name;
+staticFiles['/workspace.css']='workspace.css';
 const types={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.mjs':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.png':'image/png'};
 export const server=http.createServer(async(req,res)=>{try{
  if(!allowedHost(req.headers.host||'',cfg.allowedHosts||[]))return send(res,{error:'Endereço não autorizado.'},403);
