@@ -1,5 +1,5 @@
 """Operational ledger: local production records, costs and laser synchronization."""
-import json, uuid, threading, hashlib, sqlite3
+import json, uuid, threading, hashlib
 from pathlib import Path
 from decimal import Decimal
 from datetime import datetime, timezone

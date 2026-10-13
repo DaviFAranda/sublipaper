@@ -33,7 +33,7 @@ async function linkedItem(orderId,itemId){
 }
 async function validateLaser(source,action){if(source)await productionApi('check-laser',{itemId:source.itemId,action});}
 async function synchronizeLaser(source,number){if(source)await productionApi('sync-laser',{number:source.productionOrder||number,batch_token:source.batchToken||''});}
-const staticFiles={'/':'index.html','/completion.mjs':'completion.mjs','/styles.css':'styles.css','/refinements.css':'refinements.css','/print.css':'print.css','/logo.png':'logo.png','/commercial.mjs':'commercial.mjs','/commercial.css':'commercial.css','/factory.mjs':'factory.mjs','/laser.mjs':'laser.mjs','/laser.css':'laser.css','/factory.css':'factory.css'};
+const staticFiles={'/':'index.html','/completion.mjs':'completion.mjs','/styles.css':'styles.css','/print.css':'print.css','/logo.png':'logo.png','/commercial.mjs':'commercial.mjs','/commercial.css':'commercial.css','/factory.mjs':'factory.mjs','/laser.mjs':'laser.mjs','/laser.css':'laser.css','/factory.css':'factory.css'};
 for(const name of ['api.mjs','order-model.mjs','production.mjs','overview.mjs','closing.mjs','orders-template.mjs'])staticFiles['/app/'+name]='app/'+name;
 staticFiles['/workspace.css']='workspace.css';
 const types={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.mjs':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.png':'image/png'};
@@ -48,7 +48,6 @@ export const server=http.createServer(async(req,res)=>{try{
  if(req.method==='GET'&&route==='/api/health')return send(res,{ok:true,version:VERSION,app:'sublipaper-unificado',root:ROOT,pedidos:pedidosPort>0});
  if(req.method==='GET'&&route==='/api/session')return send(res,{user:u,setup:false,loginRequired:false});
  if(req.method==='POST'){
-  if(req.headers.origin&&req.headers.origin!==`http://${req.headers.host}`){return send(res,{error:'Origem inválida.'},403);}
   if(route==='/api/images/upload'){
    if(req.headers['content-type']!=='application/octet-stream')throw new Error('Envie o arquivo de imagem.');
    req.setTimeout(600000);res.setTimeout(600000);

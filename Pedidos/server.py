@@ -27,7 +27,6 @@ from pathlib import Path
 from urllib.parse import urlparse, parse_qs
 from PIL import Image, ImageOps, UnidentifiedImageError
 from reportlab.lib import colors
-from reportlab.lib.enums import TA_LEFT, TA_RIGHT
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.units import mm
