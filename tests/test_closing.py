@@ -66,8 +66,8 @@ class ClosingTests(unittest.TestCase):
         self.assertEqual(result['pendingConsumptionPrices'], 1)
         self.assertEqual(result['references'][0]['ft_id'], 'FT-DEMO')
         self.assertTrue(result['deliveryAt'])
-        self.assertEqual(csv_rows(data,'medicoes')[0]['BOAS'], '1000')
-        self.assertEqual(csv_rows(data,'medicoes')[0]['UNIDADE'], 'cm')
+        self.assertEqual(csv_rows(data,'medicoes')[0]['BOAS'], '10')
+        self.assertEqual(csv_rows(data,'medicoes')[0]['UNIDADE'], 'm')
         self.assertEqual(csv_rows(data,'pedidos')[0]['PEDIDO_NUM'], 'EX-DEMO')
         self.assertEqual(csv_rows(data,'consumos')[0]['FT_ID'], 'FT-DEMO')
         for kind in HEADERS:
@@ -108,6 +108,8 @@ class ClosingTests(unittest.TestCase):
         self.assertEqual(result['laserReprintCm'],300)
         self.assertEqual(result['laserReprintsDone'],1)
         self.assertEqual(set(closeout_rows([result])[0]),set(CLOSEOUT_HEADERS))
+        self.assertEqual(closeout_rows([result])[0]['M_LASER'],9)
+        self.assertEqual(closeout_rows([result])[0]['M_REIMPRESSAO_LASER'],3)
 
     def test_quantities_with_different_units_are_not_added_together(self):
         data=dataset(self.db,'')

@@ -58,12 +58,12 @@ def close_orders(data):
 
 
 CLOSEOUT_HEADERS = ['PEDIDO_ID', 'PEDIDO_NUM', 'CLIENTE', 'SERVICO', 'CONCLUIDO', 'ARTES', 'ARTES_ENTREGUES',
-    'ENTREGUE_EM', 'CM_LASER', 'CM_REIMPRESSAO_LASER', 'REIMPRESSOES_LASER_FEITAS', 'LOTES_REPOSICAO',
+    'ENTREGUE_EM', 'M_LASER', 'M_REIMPRESSAO_LASER', 'REIMPRESSOES_LASER_FEITAS', 'LOTES_REPOSICAO',
     'CUSTO_CONHECIDO', 'CONSUMOS_REGISTRADOS_COM_PRECO', 'CONSUMOS_SEM_PRECO', 'PENDENCIAS_CONFERENCIA']
 
 
 def closeout_rows(closeouts):
     return [dict(zip(CLOSEOUT_HEADERS, [r['orderId'], r['orderNumber'], r['client'], r['service'], r['completed'],
-        r['itemCount'], r['deliveredItems'], r['deliveryAt'], r['laserCm'], r['laserReprintCm'], r['laserReprintsDone'],
+        r['itemCount'], r['deliveredItems'], r['deliveryAt'], r['laserCm']/100, r['laserReprintCm']/100, r['laserReprintsDone'],
         r['replacementBatches'], r['knownConsumptionCost'], r['costComplete'], r['pendingConsumptionPrices'],
         ' | '.join(i['label'] for i in r['issues'])])) for r in closeouts]

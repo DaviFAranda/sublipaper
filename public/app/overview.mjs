@@ -16,7 +16,7 @@ function overviewEntries(rows=overviewRows){return rows.flatMap(order=>order.ite
 function overviewBadges(entry){
   const {state,item}=entry;
   if(state.done)return '<span class="ov-badge done">✓ Entregue</span>';
-  if(item.laser_progress){const l=item.laser_progress;return `<span class="ov-badge">${esc({draft:'Grades em preparação',ready:'Corte na fila',partial:'Corte parcial',complete:'Corte concluído'}[l.status])} · ${fmt(l.good)} boas · ${fmt(l.calculatedCm)} cm${l.openReprints?' · '+l.openReprints+' reposições abertas':''}</span>`;}if(!item.test_flow)return '<span class="ov-badge">Sem apontamentos</span>';
+  if(item.laser_progress){const l=item.laser_progress;return `<span class="ov-badge">${esc({draft:'Grades em preparação',ready:'Corte na fila',partial:'Corte parcial',complete:'Corte concluído'}[l.status])} · ${fmt(l.good)} boas · ${fmt(l.calculatedCm/100)} m${l.openReprints?' · '+l.openReprints+' reposições abertas':''}</span>`;}if(!item.test_flow)return '<span class="ov-badge">Sem apontamentos</span>';
   return [...state.running,...state.ready].map(stage=>`<span class="ov-badge ${stage.state}">${stage.state==='running'?'● ':''}${esc(stage.name)}${stage.state==='running'?' em execução':stage.id==='expedicao'&&item.test_flow.packed?' · volume pronto':' · na fila'}</span>`).join('')||'<span class="ov-badge">Aguardando próxima etapa</span>';
 }
 function overviewArt(entry,compact=false){
