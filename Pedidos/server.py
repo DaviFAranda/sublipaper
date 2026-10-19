@@ -40,6 +40,7 @@ from test_workflow import TestWorkflow
 import billing_bridge
 import sheet_bridge
 from operations_workflow import OperationsWorkflow
+from order_numbers import ORDER_NUMBER_PATTERN, next_order_number, valid_order_number
 
 IMAGE_LOCK = threading.Lock()
 MAX_UPLOAD = 256 * 1024 * 1024
@@ -370,7 +371,7 @@ def save(payload, *, allow_unlisted=False):
         cursor = c.execute('INSERT INTO orders(request_key,client,delivery,nf,notes,created_at,client_folder,fabric,width_m,unit_price,unit,service) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)',
           (p['request_key'], p['client'], p['delivery'], p['nf'], p['notes'], datetime.now().isoformat(timespec='seconds'),p['client_folder'],p['fabric'],p['width_m'],p['unit_price'],p['unit'],p['service']))
         oid = cursor.lastrowid
-        c.execute('UPDATE orders SET number=? WHERE id=?', (f'SP-D-{oid:06d}', oid))
+        c.execute('UPDATE orders SET number=? WHERE id=?', (next_order_number(c), oid))
         for x in p['items']:
             c.execute('INSERT INTO items(order_id,art,service,quantity,unit,fabric,width_m,price,billing_meters,asset_id,original_name,original_path) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)',
               (oid, *[x[k] for k in ['art','service','quantity','unit']],p['fabric'],p['width_m'],*[x[k] for k in ['price','billing_meters','asset_id','original_name','original_path']]))
@@ -587,7 +588,7 @@ class Handler(BaseHTTPRequestHandler):
                     return self.send_json({'preview_id':token,'name':target.name,'url':'/previews/'+token+'.jpg','bytes':output.stat().st_size})
                 except (ValueError,OSError) as e: return self.send_json({'error':str(e)},400)
             if path == '/api/health': return self.send_json({'app':'sublipaper-pedidos-demo','version':'2.0.0','portal':True,'preview':PREVIEW_ONLY})
-            match=re.fullmatch(r'/api/orders/(SP-D-\d{6})/romaneio\.pdf',path)
+            match=re.fullmatch(r'/api/orders/(' + ORDER_NUMBER_PATTERN + r')/romaneio\.pdf',path)
             if match:
                 with connect() as c:
                     row=c.execute('SELECT id FROM orders WHERE number=? AND deleted_at IS NULL',(match.group(1),)).fetchone()
@@ -679,7 +680,7 @@ class Handler(BaseHTTPRequestHandler):
                     order=TEST_WORKFLOW.resolve_batch(str(data['batch_token']))
                 else:
                     number = str(data.get('number') or '')
-                    if not re.fullmatch(r'SP-D-\d{6}',number): raise ValueError('Número de pedido inválido')
+                    if not valid_order_number(number): raise ValueError('Número de pedido inválido')
                     with connect() as c:
                         row = c.execute('SELECT id FROM orders WHERE number=? AND deleted_at IS NULL',(number,)).fetchone()
                         if not row: raise ValueError('Pedido não encontrado')

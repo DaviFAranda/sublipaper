@@ -15,6 +15,7 @@ from contextlib import contextmanager
 from datetime import datetime, timezone, timedelta
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
+from order_numbers import next_order_number
 
 
 SECTORS = {
@@ -270,8 +271,7 @@ class Factory:
             previous = db.execute("SELECT id FROM orders WHERE request_key=?", (request_key,)).fetchone()
             if previous:
                 return self.order(previous["id"], actor_role, db)
-            row = db.execute("SELECT MAX(CAST(SUBSTR(number,6) AS INTEGER)) n FROM orders WHERE number GLOB 'SP-D-[0-9]*'").fetchone()
-            number = f"SP-D-{int(row['n'] or 0)+1:06d}"
+            number = next_order_number(db)
             order_id = uuid.uuid4().hex
             db.execute("INSERT INTO orders(id,number,request_key,client,service,fabric,width_m,unit,unit_price,delivery,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)",
                        (order_id, number, request_key, client, service, fabric, str(width), unit, price, delivery, now()))
