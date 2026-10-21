@@ -1,6 +1,27 @@
-# Sublipaper — Pedidos e produção
+# Sistema de Pedidos
 
 Aplicação local para pedidos, planejamento e acompanhamento da produção, com corte a laser, grades, romaneios, reimpressões e exportação de dados operacionais para planilhas.
+
+## Instalar em outra máquina (Windows)
+
+Instale Git, Node.js 24 ou superior e Python 3.12 ou superior, disponíveis no PATH. No PowerShell, execute na pasta onde deseja instalar:
+
+```powershell
+git clone https://github.com/DaviFAranda/sublipaper.git Sistema_de_Pedidos
+cd Sistema_de_Pedidos
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r Pedidos/requirements.txt
+Copy-Item config.example.json config.json
+Copy-Item Pedidos/config.example.json Pedidos/config.json
+```
+
+Em `config.json`, mantenha `port` e defina `python` com o caminho absoluto de `.venv/Scripts/python.exe` desta instalação (use barras `/` no JSON). Em `Pedidos/config.json`, ajuste `art_root` para a pasta de artes acessível pela nova máquina. Não sobrescreva configurações de uma instalação existente.
+
+Abra **Iniciar Sistema de Pedidos.cmd**. A interface fica em `http://127.0.0.1:8780`. O nome do projeto é Sistema de Pedidos; o endereço do repositório e os comandos antigos Sublipaper são mantidos para compatibilidade com as instalações existentes.
+
+Uma instalação nova começa sem os pedidos da fábrica. O GitHub contém o código, os testes, os iniciadores e os exemplos de configuração; bancos, artes, dados de clientes e configurações locais precisam de transferência separada por backup. Não use duas cópias independentes dos bancos para operar a mesma produção. Se a outra máquina for apenas um posto de atendimento, acesse o endereço do servidor pelo navegador.
+
+Novos pedidos usam sequência numérica a partir de **30000**; referências antigas são preservadas. A automação de leitura da Digital foi estudada e ilustrada, mas ainda não está implementada.
 
 ## Execução
 
